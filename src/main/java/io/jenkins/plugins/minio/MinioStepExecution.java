@@ -22,6 +22,9 @@ import javax.security.auth.login.CredentialNotFoundException;
 import java.util.Arrays;
 import java.util.Optional;
 
+/**
+ * @author Ronald Kamphuis
+ */
 public class MinioStepExecution extends StepExecution {
 
     private final MinioBuildStep step;

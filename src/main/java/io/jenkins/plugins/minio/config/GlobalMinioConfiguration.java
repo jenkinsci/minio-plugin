@@ -9,6 +9,9 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
 
+/**
+ * @author Ronald Kamphuis
+ */
 @Extension
 public class GlobalMinioConfiguration extends GlobalConfiguration {
 

@@ -9,6 +9,9 @@ import org.jvnet.hudson.test.RestartableJenkinsRule;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+/**
+ * @author Ronald Kamphuis
+ */
 public class GlobalMinioConfigurationTest {
 
     @Rule

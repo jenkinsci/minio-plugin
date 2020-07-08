@@ -22,6 +22,9 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * @author Ronald Kamphuis
+ */
 public class MinioBuildStep extends Step implements Serializable {
 
     private static final long serialVersionUID = 3L;

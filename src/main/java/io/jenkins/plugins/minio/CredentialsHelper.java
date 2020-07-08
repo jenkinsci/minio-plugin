@@ -12,6 +12,9 @@ import jenkins.model.Jenkins;
 
 import java.util.List;
 
+/**
+ * @author Ronald Kamphuis
+ */
 public class CredentialsHelper {
 
     private CredentialsHelper() {

@@ -13,6 +13,9 @@ import org.kohsuke.stapler.QueryParameter;
 
 import java.io.Serializable;
 
+/**
+ * @author Ronald Kamphuis
+ */
 public class MinioConfiguration extends AbstractDescribableImpl<MinioConfiguration> implements Serializable {
 
     private static final long serialVersionUID = 4L;
