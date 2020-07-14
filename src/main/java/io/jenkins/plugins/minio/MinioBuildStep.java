@@ -4,30 +4,22 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.model.Item;
-import hudson.model.Run;
-import hudson.model.TaskListener;
+import hudson.Launcher;
+import hudson.model.*;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Builder;
 import hudson.util.ListBoxModel;
+import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.workflow.steps.Step;
-import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
-import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * @author Ronald Kamphuis
  */
-public class MinioBuildStep extends Step implements Serializable {
-
-    private static final long serialVersionUID = 3L;
+public class MinioBuildStep extends Builder implements SimpleBuildStep {
 
     private String host;
     private String credentialsId;
@@ -42,8 +34,16 @@ public class MinioBuildStep extends Step implements Serializable {
     }
 
     @Override
-    public StepExecution start(StepContext stepContext) throws Exception {
-        return new MinioStepExecution(this, stepContext);
+    public void perform(@NonNull Run<?, ?> run, @NonNull FilePath workspace, @NonNull EnvVars env, @NonNull Launcher launcher,
+                        @NonNull TaskListener listener) {
+        try {
+            new MinioStepExecution(run, workspace, env, launcher, listener, this).start();
+            run.setResult(Result.SUCCESS);
+        } catch (Exception e) {
+            run.setResult(Result.FAILURE);
+            listener.getLogger().println(String.format("Problem storing objects in Minio", e.getMessage()));
+            e.printStackTrace();
+        }
     }
 
     @DataBoundSetter
@@ -81,24 +81,9 @@ public class MinioBuildStep extends Step implements Serializable {
         return excludes;
     }
 
-    @Override
-    public StepDescriptor getDescriptor() {
-        return new DescriptorImpl();
-    }
-
     @Symbol("minio")
     @Extension
-    public static final class DescriptorImpl extends StepDescriptor {
-
-        @Override
-        public Set<? extends Class<?>> getRequiredContext() {
-            return new HashSet<Class<?>>() {{
-                add(Run.class);
-                add(TaskListener.class);
-                add(FilePath.class);
-                add(EnvVars.class);
-            }};
-        }
+    public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         public ListBoxModel doFillCredentialsIdItems(
                 @AncestorInPath Item item,
@@ -108,15 +93,15 @@ public class MinioBuildStep extends Step implements Serializable {
             return CredentialsHelper.getCredentialsListBox(item, credentialsId, uri);
         }
 
-        @Override
-        public String getFunctionName() {
-            return "minio";
-        }
-
         @NonNull
         @Override
         public String getDisplayName() {
             return "Upload build artifacts to Minio";
+        }
+
+        @Override
+        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+            return true;
         }
     }
 }

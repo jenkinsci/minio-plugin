@@ -2,8 +2,10 @@ package io.jenkins.plugins.minio;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.Util;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -15,8 +17,6 @@ import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.UploadObjectArgs;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.jenkinsci.plugins.workflow.steps.StepExecution;
 
 import javax.security.auth.login.CredentialNotFoundException;
 import java.util.Arrays;
@@ -25,21 +25,26 @@ import java.util.Optional;
 /**
  * @author Ronald Kamphuis
  */
-public class MinioStepExecution extends StepExecution {
+public class MinioStepExecution {
 
+    private final Run<?, ?> run;
+    private final FilePath workspace;
+    private final EnvVars env;
+    private final Launcher launcher;
+    private final TaskListener taskListener;
     private final MinioBuildStep step;
 
-    public MinioStepExecution(MinioBuildStep step, StepContext context) {
-        super(context);
+    public MinioStepExecution(@NonNull Run<?, ?> run, @NonNull FilePath workspace, @NonNull EnvVars env, @NonNull Launcher launcher,
+                              @NonNull TaskListener taskListener, @NonNull MinioBuildStep step) {
+        this.run = run;
+        this.workspace = workspace;
+        this.env = env;
+        this.launcher = launcher;
+        this.taskListener = taskListener;
         this.step = step;
     }
 
-    @Override
     public boolean start() throws Exception {
-        Run run = Optional.ofNullable(this.getContext().get(Run.class)).orElseThrow(IllegalStateException::new);
-        TaskListener listener = Optional.ofNullable(this.getContext().get(TaskListener.class)).orElseThrow(IllegalStateException::new);
-        FilePath ws = Optional.ofNullable(this.getContext().get(FilePath.class)).orElseThrow(IllegalStateException::new);
-        EnvVars envVars = Optional.ofNullable(this.getContext().get(EnvVars.class)).orElseThrow(IllegalStateException::new);
 
         MinioConfiguration config = determineConfig();
         StandardUsernamePasswordCredentials credentials = Optional.ofNullable(CredentialsProvider.findCredentialById(config.getCredentialsId(),
@@ -55,12 +60,12 @@ public class MinioStepExecution extends StepExecution {
             client.makeBucket(MakeBucketArgs.builder().bucket(step.getBucket()).build());
         }
 
-        String includes = Util.replaceMacro(this.step.getIncludes(), envVars);
-        String excludes = Util.replaceMacro(this.step.getExcludes(), envVars);
+        String includes = Util.replaceMacro(this.step.getIncludes(), env);
+        String excludes = Util.replaceMacro(this.step.getExcludes(), env);
 
-        Arrays.asList(ws.list(includes, excludes)).forEach(filePath -> {
+        Arrays.asList(workspace.list(includes, excludes)).forEach(filePath -> {
             String filename = filePath.getName();
-            listener.getLogger().print(String.format("Storing %s in bucket %s", filename, step.getBucket()));
+            taskListener.getLogger().print(String.format("Storing %s in bucket %s", filename, step.getBucket()));
             try {
                 UploadObjectArgs args = UploadObjectArgs.builder()
                         .bucket(this.step.getBucket())
@@ -73,11 +78,9 @@ public class MinioStepExecution extends StepExecution {
                 throw ex;
             } catch (Exception ex) { // Gotta catch 'em all
                 run.setResult(Result.UNSTABLE);
-                getContext().onSuccess(false);
             }
         });
 
-        getContext().onSuccess(true);
         return true;
     }
 
