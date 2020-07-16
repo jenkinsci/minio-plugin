@@ -1,10 +1,7 @@
 package io.jenkins.plugins.minio;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
+import hudson.*;
 import hudson.model.*;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
@@ -26,6 +23,7 @@ public class MinioBuildStep extends Builder implements SimpleBuildStep {
     private String bucket;
     private String includes;
     private String excludes;
+    private String targetFolder;
 
     @DataBoundConstructor
     public MinioBuildStep(String bucket, String includes) {
@@ -35,14 +33,15 @@ public class MinioBuildStep extends Builder implements SimpleBuildStep {
 
     @Override
     public void perform(@NonNull Run<?, ?> run, @NonNull FilePath workspace, @NonNull EnvVars env, @NonNull Launcher launcher,
-                        @NonNull TaskListener listener) {
+                        @NonNull TaskListener listener) throws AbortException {
         try {
             new MinioStepExecution(run, workspace, env, launcher, listener, this).start();
             run.setResult(Result.SUCCESS);
         } catch (Exception e) {
             run.setResult(Result.FAILURE);
-            listener.getLogger().println(String.format("Problem storing objects in Minio", e.getMessage()));
+            listener.getLogger().println(String.format("Problem storing objects in Minio: %s", e.getMessage()));
             e.printStackTrace();
+            throw new AbortException("Failed to upload build artifacts to Minio");
         }
     }
 
@@ -59,6 +58,11 @@ public class MinioBuildStep extends Builder implements SimpleBuildStep {
     @DataBoundSetter
     public void setExcludes(String excludes) {
         this.excludes = excludes;
+    }
+
+    @DataBoundSetter
+    public void setTargetFolder(String targetFolder) {
+        this.targetFolder = targetFolder;
     }
 
     public String getHost() {
@@ -79,6 +83,10 @@ public class MinioBuildStep extends Builder implements SimpleBuildStep {
 
     public String getExcludes() {
         return excludes;
+    }
+
+    public String getTargetFolder() {
+        return targetFolder;
     }
 
     @Symbol("minio")
