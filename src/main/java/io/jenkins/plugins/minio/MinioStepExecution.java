@@ -12,10 +12,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.minio.config.GlobalMinioConfiguration;
 import io.jenkins.plugins.minio.config.MinioConfiguration;
-import io.minio.BucketExistsArgs;
-import io.minio.MakeBucketArgs;
-import io.minio.MinioClient;
-import io.minio.UploadObjectArgs;
+import io.minio.*;
 import org.apache.commons.lang.StringUtils;
 
 import javax.security.auth.login.CredentialNotFoundException;
@@ -62,18 +59,25 @@ public class MinioStepExecution {
 
         String includes = Util.replaceMacro(this.step.getIncludes(), env);
         String excludes = Util.replaceMacro(this.step.getExcludes(), env);
+        String targetFolderExpanded = Util.replaceMacro(this.step.getTargetFolder(), env);
 
+        if (!StringUtils.isEmpty(targetFolderExpanded) && !targetFolderExpanded.endsWith("/")) {
+            targetFolderExpanded = targetFolderExpanded + "/";
+        }
+
+        final String targetFolder = targetFolderExpanded;
         Arrays.asList(workspace.list(includes, excludes)).forEach(filePath -> {
             String filename = filePath.getName();
-            taskListener.getLogger().print(String.format("Storing %s in bucket %s", filename, step.getBucket()));
+            taskListener.getLogger().println(String.format("Storing %s in bucket %s", filename, step.getBucket()));
             try {
-                UploadObjectArgs args = UploadObjectArgs.builder()
+                PutObjectArgs put = PutObjectArgs.builder()
                         .bucket(this.step.getBucket())
-                        .object(filename)
-                        .filename(filePath.getRemote())
+                        .object(targetFolder + filename)
+                        .stream(filePath.read(), filePath.toVirtualFile().length(), -1)
+                        .contentType("application/octet-stream")
                         .build();
+                client.putObject(put);
 
-                client.uploadObject(args);
             } catch (RuntimeException ex) {
                 throw ex;
             } catch (Exception ex) { // Gotta catch 'em all
