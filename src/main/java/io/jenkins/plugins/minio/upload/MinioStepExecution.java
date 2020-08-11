@@ -1,4 +1,4 @@
-package io.jenkins.plugins.minio;
+package io.jenkins.plugins.minio.upload;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -10,6 +10,7 @@ import hudson.Util;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import io.jenkins.plugins.minio.ConfigHelper;
 import io.jenkins.plugins.minio.config.GlobalMinioConfiguration;
 import io.jenkins.plugins.minio.config.MinioConfiguration;
 import io.minio.*;
@@ -43,7 +44,7 @@ public class MinioStepExecution {
 
     public boolean start() throws Exception {
 
-        MinioConfiguration config = determineConfig();
+        MinioConfiguration config = ConfigHelper.getConfig(step.getHost(), step.getCredentialsId());
         StandardUsernamePasswordCredentials credentials = Optional.ofNullable(CredentialsProvider.findCredentialById(config.getCredentialsId(),
                 StandardUsernamePasswordCredentials.class,
                 run)).orElseThrow(CredentialNotFoundException::new);
@@ -86,19 +87,5 @@ public class MinioStepExecution {
         });
 
         return true;
-    }
-
-    private MinioConfiguration determineConfig() {
-        MinioConfiguration config;
-        // If host is empty, use global config
-        if (StringUtils.isEmpty(step.getHost())) {
-            config = GlobalMinioConfiguration.get().getConfiguration();
-        } else {
-            config = new MinioConfiguration();
-            config.setHost(step.getHost());
-            config.setCredentialsId(step.getCredentialsId());
-        }
-
-        return config;
     }
 }

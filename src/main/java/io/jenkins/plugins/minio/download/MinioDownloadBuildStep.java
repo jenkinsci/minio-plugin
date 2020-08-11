@@ -1,4 +1,4 @@
-package io.jenkins.plugins.minio;
+package io.jenkins.plugins.minio.download;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.*;
@@ -6,6 +6,7 @@ import hudson.model.*;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.ListBoxModel;
+import io.jenkins.plugins.minio.CredentialsHelper;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
@@ -16,32 +17,31 @@ import org.kohsuke.stapler.QueryParameter;
 /**
  * @author Ronald Kamphuis
  */
-public class MinioBuildStep extends Builder implements SimpleBuildStep {
+public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
 
     private String host;
     private String credentialsId;
     private String bucket;
-    private String includes;
+    private String file;
     private String excludes;
     private String targetFolder;
 
     @DataBoundConstructor
-    public MinioBuildStep(String bucket, String includes) {
+    public MinioDownloadBuildStep(String bucket, String file) {
         this.bucket = bucket;
-        this.includes = includes;
+        this.file = file;
     }
 
     @Override
     public void perform(@NonNull Run<?, ?> run, @NonNull FilePath workspace, @NonNull EnvVars env, @NonNull Launcher launcher,
                         @NonNull TaskListener listener) throws AbortException {
         try {
-            new MinioStepExecution(run, workspace, env, launcher, listener, this).start();
-            run.setResult(Result.SUCCESS);
+            new MinioDownloadStepExecution(run, workspace, env, launcher, listener, this).start();
         } catch (Exception e) {
             run.setResult(Result.FAILURE);
-            listener.getLogger().println(String.format("Problem storing objects in Minio: %s", e.getMessage()));
+            listener.getLogger().println(String.format("Problem downloading objects from Minio: %s", e.getMessage()));
             e.printStackTrace();
-            throw new AbortException("Failed to upload build artifacts to Minio");
+            throw new AbortException("Failed to download files from Minio");
         }
     }
 
@@ -77,8 +77,8 @@ public class MinioBuildStep extends Builder implements SimpleBuildStep {
         return bucket;
     }
 
-    public String getIncludes() {
-        return includes;
+    public String getFile() {
+        return file;
     }
 
     public String getExcludes() {
@@ -89,7 +89,7 @@ public class MinioBuildStep extends Builder implements SimpleBuildStep {
         return targetFolder;
     }
 
-    @Symbol("minio")
+    @Symbol("minioDownload")
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
@@ -104,7 +104,7 @@ public class MinioBuildStep extends Builder implements SimpleBuildStep {
         @NonNull
         @Override
         public String getDisplayName() {
-            return "Upload build artifacts to Minio";
+            return "Download files from Minio";
         }
 
         @Override
