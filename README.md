@@ -1,4 +1,7 @@
 # Minio plugin
+
+[![Build Status](https://ci.jenkins.io/job/Plugins/job/minio-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/minio-plugin/job/master/)
+
 Minio plugin for Jenkins.
 
 Plugin is used to send files to Minio.
