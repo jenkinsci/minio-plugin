@@ -5,7 +5,7 @@ on:
     types: [ published ]
 
 env:
-  PROJECT: rest-list-parameter
+  PROJECT: minio-plugin
 
 jobs:
   build-upload-artifact:
