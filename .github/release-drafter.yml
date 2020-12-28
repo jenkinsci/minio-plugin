@@ -1,7 +1,7 @@
 # Inherit base settings from https://github.com/jenkinsci/.github/blob/master/.github/release-drafter.yml
 _extends: .github
 name-template: MinIO Plugin v$RESOLVED_VERSION
-tag-template: minio-$RESOLVED_VERSION
+tag-template: $RESOLVED_VERSION
 version-template: $MAJOR.$MINOR.$PATCH
 
 # Basic SemVer version resolver
