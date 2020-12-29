@@ -1,23 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
         <version>4.15</version>
-        <relativePath />
+        <relativePath/>
     </parent>
-    <groupId>io.jenkins.plugins</groupId>
-    <artifactId>minio</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
-    <packaging>hpi</packaging>
+
     <properties>
-        <jenkins.version>2.243</jenkins.version>
+        <revision>1.1.1</revision>
+        <changelist>-SNAPSHOT</changelist>
+        <gitHubRepo>jenkinsci/minio-plugin</gitHubRepo>
+        <jenkins.version>2.249.3</jenkins.version>
+        <bom.artifactId>2.249.x</bom.artifactId>
+        <bom.version>20</bom.version>
         <java.level>8</java.level>
         <powermock.version>2.0.2</powermock.version>
     </properties>
+
     <name>Minio Plugin</name>
-    <!-- The default licence for Jenkins OSS Plugins is MIT. Substitute for the applicable one if needed. -->
+    <groupId>io.jenkins.plugins</groupId>
+    <artifactId>minio</artifactId>
+    <url>https://github.com/${gitHubRepo}</url>
+    <version>${revision}${changelist}</version>
+    <packaging>hpi</packaging>
+
     <licenses>
         <license>
             <name>MIT License</name>
@@ -25,23 +35,69 @@
         </license>
     </licenses>
 
-    <!-- If you want this to appear on the wiki page: -->
     <developers>
-      <developer>
-        <id>sleepy</id>
-        <name>Ronald Kamphuis</name>
-        <email />
-      </developer>
+        <developer>
+            <id>sleepy</id>
+            <name>Ronald Kamphuis</name>
+            <email/>
+        </developer>
     </developers>
 
-    <!-- Assuming you want to host on @jenkinsci: -->
-    <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/${gitHubRepo}</url>
+    </issueManagement>
+
     <scm>
-        <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
-        <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-      <tag>HEAD</tag>
-  </scm>
+        <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
+        <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
+        <url>https://github.com/${gitHubRepo}</url>
+        <tag>${scmTag}</tag>
+    </scm>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.jenkins.tools.bom</groupId>
+                <artifactId>bom-${bom.artifactId}</artifactId>
+                <version>${bom.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>structs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-step-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>credentials</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>7.1.4</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.github.spotbugs</groupId>
+                    <artifactId>spotbugs-annotations</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>30.1-jre</version>
+        </dependency>
+    </dependencies>
 
     <repositories>
         <repository>
@@ -56,53 +112,6 @@
         </pluginRepository>
     </pluginRepositories>
 
-    <dependencies>
-        <dependency>
-            <groupId>io.minio</groupId>
-            <artifactId>minio</artifactId>
-            <version>7.1.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.github.spotbugs</groupId>
-                    <artifactId>spotbugs-annotations</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jenkins-ci.plugins.workflow</groupId>
-            <artifactId>workflow-step-api</artifactId>
-            <version>2.23</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>credentials</artifactId>
-            <version>2.3.14</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>structs</artifactId>
-            <version>1.20</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>30.1-jre</version>
-        </dependency>
-    </dependencies>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.jenkins-ci.main</groupId>
-                <artifactId>jenkins-bom</artifactId>
-                <version>${jenkins-bom.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <build>
         <plugins>
             <plugin>
@@ -110,7 +119,8 @@
                 <artifactId>maven-hpi-plugin</artifactId>
                 <configuration>
                     <minimumJavaVersion>1.8</minimumJavaVersion>
-                    <pluginFirstClassLoader>true</pluginFirstClassLoader> <!-- Needed for Guava version in Minio client -->
+                    <!-- Needed for Guava version in Minio client -->
+                    <pluginFirstClassLoader>true</pluginFirstClassLoader>
                 </configuration>
             </plugin>
         </plugins>
