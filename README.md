@@ -1,6 +1,10 @@
 # Minio plugin
 
 [![Build Status](https://ci.jenkins.io/job/Plugins/job/minio-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/minio-plugin/job/master/)
+[![License](https://img.shields.io/github/license/jenkinsci/minio-plugin.svg?color=green)](https://github.com/jenkinsci/minio-plugin/blob/master/LICENSE)
+[![Contributors](https://img.shields.io/github/contributors/jenkinsci/minio-plugin.svg?color=blue)](https://github.com/jenkinsci/minio-plugin/graphs/contributors)
+[![Installations](https://img.shields.io/jenkins/plugin/i/minio.svg?color=blue&label=installations)](https://plugins.jenkins.io/minio)
+[![Changelog](https://img.shields.io/github/release/jenkinsci/minio-plugin.svg?label=changelog)](https://github.com/jenkinsci/minio-plugin/releases/latest)
 
 Minio plugin for Jenkins.
 
