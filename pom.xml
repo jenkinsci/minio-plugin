@@ -18,7 +18,6 @@
         <bom.artifactId>2.249.x</bom.artifactId>
         <bom.version>20</bom.version>
         <java.level>8</java.level>
-        <powermock.version>2.0.2</powermock.version>
     </properties>
 
     <name>Minio Plugin</name>
