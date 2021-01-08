@@ -9,6 +9,7 @@ import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
+import io.jenkins.plugins.minio.ClientUtil;
 import io.jenkins.plugins.minio.ConfigHelper;
 import io.jenkins.plugins.minio.config.GlobalMinioConfiguration;
 import io.jenkins.plugins.minio.config.MinioConfiguration;
@@ -47,15 +48,7 @@ public class MinioDownloadStepExecution {
 
     public boolean start() throws Exception {
 
-        MinioConfiguration config = ConfigHelper.getConfig(step.getHost(), step.getCredentialsId());
-        StandardUsernamePasswordCredentials credentials = Optional.ofNullable(CredentialsProvider.findCredentialById(config.getCredentialsId(),
-                StandardUsernamePasswordCredentials.class,
-                run)).orElseThrow(CredentialNotFoundException::new);
-
-        MinioClient client = MinioClient.builder()
-                .endpoint(config.getHost())
-                .credentials(credentials.getUsername(), credentials.getPassword().getPlainText())
-                .build();
+        MinioClient client = ClientUtil.getClient(step.getHost(), step.getCredentialsId(), run);
 
         if (!client.bucketExists(BucketExistsArgs.builder().bucket(step.getBucket()).build())) {
             throw new MinioException("Bucket '"+ step.getBucket() +"' does not exist");

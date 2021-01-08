@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler" xmlns:c="/lib/credentials">
+    <f:entry field="host" title="Host">
+        <f:textbox />
+    </f:entry>
+
+    <f:entry title="Minio Credential" field="credentialsId" name="credentialsId">
+        <c:select/>
+    </f:entry>
+
+    <f:entry field="bucket" title="Bucket">
+        <f:textbox />
+    </f:entry>
+
+    <f:entry field="files" title="Files">
+        <f:textbox />
+    </f:entry>
+
+    <f:entry field="failOnNonExisting" title="Fail on non-existing files">
+        <f:checkbox />
+    </f:entry>
+
+</j:jelly>
