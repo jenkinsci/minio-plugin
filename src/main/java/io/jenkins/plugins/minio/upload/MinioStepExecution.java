@@ -10,6 +10,7 @@ import hudson.Util;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import io.jenkins.plugins.minio.ClientUtil;
 import io.jenkins.plugins.minio.ConfigHelper;
 import io.jenkins.plugins.minio.config.GlobalMinioConfiguration;
 import io.jenkins.plugins.minio.config.MinioConfiguration;
@@ -44,15 +45,7 @@ public class MinioStepExecution {
 
     public boolean start() throws Exception {
 
-        MinioConfiguration config = ConfigHelper.getConfig(step.getHost(), step.getCredentialsId());
-        StandardUsernamePasswordCredentials credentials = Optional.ofNullable(CredentialsProvider.findCredentialById(config.getCredentialsId(),
-                StandardUsernamePasswordCredentials.class,
-                run)).orElseThrow(CredentialNotFoundException::new);
-
-        MinioClient client = MinioClient.builder()
-                .endpoint(config.getHost())
-                .credentials(credentials.getUsername(), credentials.getPassword().getPlainText())
-                .build();
+        MinioClient client = ClientUtil.getClient(step.getHost(), step.getCredentialsId(), run);
 
         if (!client.bucketExists(BucketExistsArgs.builder().bucket(step.getBucket()).build())) {
             client.makeBucket(MakeBucketArgs.builder().bucket(step.getBucket()).build());
