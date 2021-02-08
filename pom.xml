@@ -15,7 +15,7 @@
         <gitHubRepo>jenkinsci/minio-plugin</gitHubRepo>
         <jenkins.version>2.249.3</jenkins.version>
         <bom.artifactId>2.249.x</bom.artifactId>
-        <bom.version>21</bom.version>
+        <bom.version>23</bom.version>
         <java.level>8</java.level>
     </properties>
 
