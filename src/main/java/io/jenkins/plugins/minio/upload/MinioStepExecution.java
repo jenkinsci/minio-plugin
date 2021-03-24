@@ -20,6 +20,16 @@ import org.apache.commons.lang.StringUtils;
 import javax.security.auth.login.CredentialNotFoundException;
 import java.util.Arrays;
 import java.util.Optional;
+import javax.activation.MimetypesFileTypeMap;
+import java.io.File;
+import java.io.IOException;
+import java.net.FileNameMap;
+import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+
 
 /**
  * @author Ronald Kamphuis
@@ -43,6 +53,7 @@ public class MinioStepExecution {
         this.step = step;
     }
 
+    
     public boolean start() throws Exception {
 
         MinioClient client = ClientUtil.getClient(step.getHost(), step.getCredentialsId(), run);
@@ -62,13 +73,24 @@ public class MinioStepExecution {
         final String targetFolder = targetFolderExpanded;
         Arrays.asList(workspace.list(includes, excludes)).forEach(filePath -> {
             String filename = filePath.getName();
-            taskListener.getLogger().println(String.format("Storing %s in bucket %s", filename, step.getBucket()));
+            Path path = Paths.get(filename);
+            String contentType = null;
+            try {
+                contentType = Files.probeContentType(path);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if (contentType == null) {
+                contentType = new MimetypesFileTypeMap().getContentType(filename);
+            }
+            System.out.println("getContentType, File ContentType is : " + contentType);
+            taskListener.getLogger().println(String.format("Storing [%s] in bucket  [%s] , mime [%s] ", filename, step.getBucket(),contentType));
             try {
                 PutObjectArgs put = PutObjectArgs.builder()
                         .bucket(this.step.getBucket())
                         .object(targetFolder + filename)
                         .stream(filePath.read(), filePath.toVirtualFile().length(), -1)
-                        .contentType("application/octet-stream")
+                        .contentType(contentType)
                         .build();
                 client.putObject(put);
 
