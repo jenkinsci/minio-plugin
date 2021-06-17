@@ -7,7 +7,10 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.minio.CredentialsHelper;
+import io.minio.ErrorCode;
+import io.minio.errors.ErrorResponseException;
 import jenkins.tasks.SimpleBuildStep;
+
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -25,6 +28,7 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
     private String file;
     private String excludes;
     private String targetFolder;
+    private boolean failOnNonExisting = true;
 
     @DataBoundConstructor
     public MinioDownloadBuildStep(String bucket, String file) {
@@ -37,11 +41,15 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
                         @NonNull TaskListener listener) throws AbortException {
         try {
             new MinioDownloadStepExecution(run, workspace, env, launcher, listener, this).start();
+        } catch (ErrorResponseException e) {
+            ErrorCode code = e.errorResponse().errorCode();
+            if ((code.equals(ErrorCode.NO_SUCH_OBJECT) || code.equals(ErrorCode.NO_SUCH_BUCKET)) && !this.failOnNonExisting) {
+                listener.getLogger().println(String.format(String.format("File [%s] not found in bucket [%s], but failOnNonExisting = false.", this.file, this.bucket)));
+            } else {
+                setFailed(run, listener, e);
+            }
         } catch (Exception e) {
-            run.setResult(Result.FAILURE);
-            listener.getLogger().println(String.format("Problem downloading objects from Minio: %s", e.getMessage()));
-            e.printStackTrace();
-            throw new AbortException("Failed to download files from Minio");
+            setFailed(run, listener, e);
         }
     }
 
@@ -63,6 +71,11 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
     @DataBoundSetter
     public void setTargetFolder(String targetFolder) {
         this.targetFolder = targetFolder;
+    }
+
+    @DataBoundSetter
+    public void setFailOnNonExisting(boolean failOnNonExisting) {
+        this.failOnNonExisting = failOnNonExisting;
     }
 
     public String getHost() {
@@ -87,6 +100,17 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
 
     public String getTargetFolder() {
         return targetFolder;
+    }
+
+    public boolean getFailOnNonExisting() {
+        return failOnNonExisting;
+    }
+
+    private void setFailed(@NonNull Run<?, ?> run, TaskListener listener, Exception e) throws AbortException {
+        run.setResult(Result.FAILURE);
+        listener.getLogger().println(String.format("Problem downloading objects from Minio: %s", e.getMessage()));
+        e.printStackTrace();
+        throw new AbortException("Failed to download files from Minio");
     }
 
     @Symbol("minioDownload")
