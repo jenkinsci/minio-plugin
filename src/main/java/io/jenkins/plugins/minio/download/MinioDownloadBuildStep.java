@@ -25,6 +25,7 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
     private String file;
     private String excludes;
     private String targetFolder;
+    private boolean failOnNonExisting = true;
 
     @DataBoundConstructor
     public MinioDownloadBuildStep(String bucket, String file) {
@@ -38,10 +39,14 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
         try {
             new MinioDownloadStepExecution(run, workspace, env, launcher, listener, this).start();
         } catch (Exception e) {
-            run.setResult(Result.FAILURE);
-            listener.getLogger().println(String.format("Problem downloading objects from Minio: %s", e.getMessage()));
-            e.printStackTrace();
-            throw new AbortException("Failed to download files from Minio");
+            if (this.failOnNonExisting) {
+                run.setResult(Result.FAILURE);
+                listener.getLogger().println(String.format("Problem downloading objects from Minio: %s", e.getMessage()));
+                e.printStackTrace();
+                throw new AbortException("Failed to download files from Minio");
+            } else {
+                listener.getLogger().println(String.format(String.format("File [%s] not found in bucket [%s], but failOnNonExisting = false.", this.file, this.bucket)));
+            }
         }
     }
 
@@ -63,6 +68,11 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
     @DataBoundSetter
     public void setTargetFolder(String targetFolder) {
         this.targetFolder = targetFolder;
+    }
+
+    @DataBoundSetter
+    public void setFailOnNonExisting(boolean failOnNonExisting) {
+        this.failOnNonExisting = failOnNonExisting;
     }
 
     public String getHost() {
@@ -87,6 +97,10 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
 
     public String getTargetFolder() {
         return targetFolder;
+    }
+
+    public boolean getFailOnNonExisting() {
+        return failOnNonExisting;
     }
 
     @Symbol("minioDownload")

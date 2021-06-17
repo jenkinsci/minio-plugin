@@ -21,4 +21,8 @@
         <f:textbox />
     </f:entry>
 
+    <f:entry field="failOnNonExisting" title="Fail on non-existing">
+        <f:checkbox />
+    </f:entry>
+
 </j:jelly>
