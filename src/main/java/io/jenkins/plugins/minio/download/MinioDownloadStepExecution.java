@@ -10,12 +10,15 @@ import io.jenkins.plugins.minio.ClientUtil;
 import io.minio.BucketExistsArgs;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
+import io.minio.StatObjectArgs;
 import io.minio.errors.MinioException;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Paths;
+import java.util.Optional;
 
 public class MinioDownloadStepExecution {
 
@@ -44,8 +47,12 @@ public class MinioDownloadStepExecution {
             throw new MinioException("Bucket '"+ step.getBucket() +"' does not exist");
         }
 
-        String filename = env.expand(step.getFile());
-        filename = new File(filename).getName();
+        Optional<String> filenameOpt = Optional.of(env.expand(step.getFile()));
+        String filename = filenameOpt.map(x -> Paths.get(x).getFileName().toString()).orElseThrow(MinioException::new);
+
+        // This will throw an exception up to the step which will handle the exception appropriately.
+        client.statObject(StatObjectArgs.builder().bucket(step.getBucket()).object(filename).build());
+
         String localFilePath = "";
         if (!StringUtils.isEmpty(step.getTargetFolder())) {
             localFilePath = env.expand(step.getTargetFolder()) + File.separator;

@@ -24,8 +24,8 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
 
     private String host;
     private String credentialsId;
-    private String bucket;
-    private String file;
+    private final String bucket;
+    private final String file;
     private String excludes;
     private String targetFolder;
     private boolean failOnNonExisting = true;
@@ -43,8 +43,8 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
             new MinioDownloadStepExecution(run, workspace, env, launcher, listener, this).start();
         } catch (ErrorResponseException e) {
             ErrorCode code = e.errorResponse().errorCode();
-            if ((code.equals(ErrorCode.NO_SUCH_OBJECT) || code.equals(ErrorCode.NO_SUCH_BUCKET)) && !this.failOnNonExisting) {
-                listener.getLogger().println(String.format(String.format("File [%s] not found in bucket [%s], but failOnNonExisting = false.", this.file, this.bucket)));
+            if ((code.equals(ErrorCode.NO_SUCH_OBJECT) || code.equals(ErrorCode.NO_SUCH_BUCKET) || code.equals(ErrorCode.NO_SUCH_KEY)) && !this.failOnNonExisting) {
+                listener.getLogger().println(String.format(String.format("File [%s] not found in bucket [%s], but failOnNonExisting = false.", env.expand(this.file), this.bucket)));
             } else {
                 setFailed(run, listener, e);
             }
@@ -107,7 +107,6 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
     }
 
     private void setFailed(@NonNull Run<?, ?> run, TaskListener listener, Exception e) throws AbortException {
-        run.setResult(Result.FAILURE);
         listener.getLogger().println(String.format("Problem downloading objects from Minio: %s", e.getMessage()));
         e.printStackTrace();
         throw new AbortException("Failed to download files from Minio");
