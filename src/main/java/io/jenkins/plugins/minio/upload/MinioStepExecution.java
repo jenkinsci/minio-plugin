@@ -83,7 +83,6 @@ public class MinioStepExecution {
             if (contentType == null) {
                 contentType = new MimetypesFileTypeMap().getContentType(filename);
             }
-            System.out.println("getContentType, File ContentType is : " + contentType);
             taskListener.getLogger().println(String.format("Storing [%s] in bucket  [%s] , mime [%s] ", filename, step.getBucket(),contentType));
             try {
                 PutObjectArgs put = PutObjectArgs.builder()
