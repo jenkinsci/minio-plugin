@@ -3,6 +3,7 @@ name: Upload release artifact
 on:
   release:
     types: [ published ]
+  workflow_dispatch:
 
 env:
   ARTIFACT_ID: minio
