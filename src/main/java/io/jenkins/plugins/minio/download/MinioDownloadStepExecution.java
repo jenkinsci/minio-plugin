@@ -52,7 +52,7 @@ public class MinioDownloadStepExecution {
         // This will throw an exception up to the step which will handle the exception appropriately.
         client.statObject(StatObjectArgs.builder().bucket(step.getBucket()).object(key).build());
 
-        String filename = Paths.get(key).getFileName().toString();
+        String filename = Optional.of(key).map(x -> Paths.get(x).getFileName().toString()).orElseThrow(MinioException::new);
         String localFilePath = "";
         if (!StringUtils.isEmpty(step.getTargetFolder())) {
             localFilePath = env.expand(step.getTargetFolder()) + File.separator;
