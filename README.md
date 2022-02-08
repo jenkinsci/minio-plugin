@@ -8,7 +8,7 @@
 
 Minio plugin for Jenkins.
 
-Plugin is used to send files to Minio.
+Plugin is used to work with files in Minio.
 
 ## Usage
 ### Global configuration
