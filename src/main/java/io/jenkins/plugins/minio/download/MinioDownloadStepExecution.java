@@ -47,12 +47,12 @@ public class MinioDownloadStepExecution {
             throw new MinioException("Bucket '"+ step.getBucket() +"' does not exist");
         }
 
-        Optional<String> filenameOpt = Optional.of(env.expand(step.getFile()));
-        String filename = filenameOpt.map(x -> Paths.get(x).getFileName().toString()).orElseThrow(MinioException::new);
+        String key = Optional.of(env.expand(step.getFile())).orElseThrow(MinioException::new);
 
         // This will throw an exception up to the step which will handle the exception appropriately.
-        client.statObject(StatObjectArgs.builder().bucket(step.getBucket()).object(filename).build());
+        client.statObject(StatObjectArgs.builder().bucket(step.getBucket()).object(key).build());
 
+        String filename = Paths.get(key).getFileName().toString();
         String localFilePath = "";
         if (!StringUtils.isEmpty(step.getTargetFolder())) {
             localFilePath = env.expand(step.getTargetFolder()) + File.separator;
