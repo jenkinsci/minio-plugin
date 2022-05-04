@@ -26,6 +26,7 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
     private String credentialsId;
     private final String bucket;
     private final String file;
+    private boolean recursive = false;
     private String excludes;
     private String targetFolder;
     private boolean failOnNonExisting = true;
@@ -51,6 +52,11 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
         } catch (Exception e) {
             setFailed(run, listener, e);
         }
+    }
+
+    @DataBoundSetter
+    public void setRecursive(boolean recursive) {
+        this.recursive = recursive;
     }
 
     @DataBoundSetter
@@ -92,6 +98,10 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
 
     public String getFile() {
         return file;
+    }
+
+    public boolean getRecursive() {
+        return recursive;
     }
 
     public String getExcludes() {

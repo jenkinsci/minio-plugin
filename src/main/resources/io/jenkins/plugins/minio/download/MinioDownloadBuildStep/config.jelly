@@ -21,6 +21,10 @@
         <f:textbox />
     </f:entry>
 
+    <f:entry field="recursive" title="Rescursive">
+        <f:checkbox />
+    </f:entry>
+
     <f:entry field="failOnNonExisting" title="Fail on non-existing">
         <f:checkbox />
     </f:entry>

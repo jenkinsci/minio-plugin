@@ -9,9 +9,13 @@ import hudson.model.TaskListener;
 import io.jenkins.plugins.minio.ClientUtil;
 import io.minio.BucketExistsArgs;
 import io.minio.GetObjectArgs;
+import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
+import io.minio.Result;
 import io.minio.StatObjectArgs;
 import io.minio.errors.MinioException;
+import io.minio.messages.Item;
+
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
@@ -47,19 +51,32 @@ public class MinioDownloadStepExecution {
             throw new MinioException("Bucket '"+ step.getBucket() +"' does not exist");
         }
 
-        String key = Optional.of(env.expand(step.getFile())).orElseThrow(MinioException::new);
-
-        // This will throw an exception up to the step which will handle the exception appropriately.
-        client.statObject(StatObjectArgs.builder().bucket(step.getBucket()).object(key).build());
-
-        String filename = Optional.of(key).map(x -> Paths.get(x).getFileName().toString()).orElseThrow(MinioException::new);
         String localFilePath = "";
         if (!StringUtils.isEmpty(step.getTargetFolder())) {
             localFilePath = env.expand(step.getTargetFolder()) + File.separator;
         }
+
+        if ( step.getRecursive() ) {
+            String prefix = Optional.of(env.expand(step.getFile())).orElseThrow(MinioException::new);
+            downloadDirectory(client, prefix, localFilePath);
+        } else {
+            String key = Optional.of(env.expand(step.getFile())).orElseThrow(MinioException::new);
+
+            // This will throw an exception up to the step which will handle the exception appropriately.
+            client.statObject(StatObjectArgs.builder().bucket(step.getBucket()).object(key).build());
+
+            downloadFile(client, key, localFilePath);
+        }
+
+        return true;
+    }
+
+    private void downloadFile( MinioClient client, String key, String localFilePath ) throws Exception {
+
+        String filename = Optional.of(key).map(x -> Paths.get(x).getFileName().toString()).orElseThrow(MinioException::new);
         localFilePath = localFilePath + filename;
 
-        String remoteFile = env.expand(step.getFile());
+        String remoteFile = key;
         taskListener.getLogger().println(String.format("Downloading %s from bucket %s", remoteFile, step.getBucket()));
 
         OutputStream fileOutputStream = workspace.child(localFilePath).write();
@@ -74,7 +91,23 @@ public class MinioDownloadStepExecution {
         while ((i = minioInputStream.read(buf)) != -1) {
             fileOutputStream.write(buf, 0, i);
         }
+    }
 
-        return true;
+    private void downloadDirectory(MinioClient client, String prefix, String localFilePath) throws Exception {
+        Iterable<Result<Item>> objects = client.listObjects(
+            ListObjectsArgs.builder()
+                           .bucket(step.getBucket())
+                           .prefix(prefix)
+                           .recursive(false)
+                           .build());
+
+        for ( Result<Item> result : objects ) {
+            if (result.get().isDir()) {
+                String subFilePath = localFilePath + File.separator + result.get().objectName();
+                downloadDirectory(client, result.get().objectName(), subFilePath);
+            } else {
+                downloadFile(client, result.get().objectName(), localFilePath );
+            }
+        }
     }
 }
