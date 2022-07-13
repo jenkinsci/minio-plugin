@@ -62,17 +62,19 @@ public class MinioDownloadStepExecution {
         String remoteFile = env.expand(step.getFile());
         taskListener.getLogger().println(String.format("Downloading %s from bucket %s", remoteFile, step.getBucket()));
 
-        OutputStream fileOutputStream = workspace.child(localFilePath).write();
-        GetObjectArgs getArgs = GetObjectArgs.builder()
-                .bucket(step.getBucket())
-                .object(remoteFile)
-                .build();
+        try (OutputStream fileOutputStream = workspace.child(localFilePath).write()) {
+            GetObjectArgs getArgs = GetObjectArgs.builder()
+                    .bucket(step.getBucket())
+                    .object(remoteFile)
+                    .build();
 
-        InputStream minioInputStream = client.getObject(getArgs);
-        final byte[] buf = new byte[8192];
-        int i = 0;
-        while ((i = minioInputStream.read(buf)) != -1) {
-            fileOutputStream.write(buf, 0, i);
+            try (InputStream minioInputStream = client.getObject(getArgs)) {
+                final byte[] buf = new byte[8192];
+                int i = 0;
+                while ((i = minioInputStream.read(buf)) != -1) {
+                    fileOutputStream.write(buf, 0, i);
+                }
+            }
         }
 
         return true;
