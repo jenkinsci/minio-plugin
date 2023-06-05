@@ -1,7 +1,7 @@
 package io.jenkins.plugins.minio.config;
 
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlTextInput;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
