@@ -7,7 +7,6 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.minio.CredentialsHelper;
-import io.minio.ErrorCode;
 import io.minio.errors.ErrorResponseException;
 import jenkins.tasks.SimpleBuildStep;
 
@@ -42,8 +41,8 @@ public class MinioDownloadBuildStep extends Builder implements SimpleBuildStep {
         try {
             new MinioDownloadStepExecution(run, workspace, env, launcher, listener, this).start();
         } catch (ErrorResponseException e) {
-            ErrorCode code = e.errorResponse().errorCode();
-            if ((code.equals(ErrorCode.NO_SUCH_OBJECT) || code.equals(ErrorCode.NO_SUCH_BUCKET) || code.equals(ErrorCode.NO_SUCH_KEY)) && !this.failOnNonExisting) {
+            String code = e.errorResponse().code();
+            if (( code.equals("NoSuchBucket") || code.equals("NoSuchKey")) && !this.failOnNonExisting) {
                 listener.getLogger().println(String.format(String.format("File [%s] not found in bucket [%s], but failOnNonExisting = false.", env.expand(this.file), this.bucket)));
             } else {
                 setFailed(run, listener, e);
