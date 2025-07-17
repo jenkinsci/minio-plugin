@@ -1,7 +1,5 @@
 package io.jenkins.plugins.minio.upload;
 
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -11,23 +9,18 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.minio.ClientUtil;
-import io.jenkins.plugins.minio.ConfigHelper;
-import io.jenkins.plugins.minio.config.GlobalMinioConfiguration;
-import io.jenkins.plugins.minio.config.MinioConfiguration;
-import io.minio.*;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
 import org.apache.commons.lang.StringUtils;
 
-import javax.security.auth.login.CredentialNotFoundException;
-import java.util.Arrays;
-import java.util.Optional;
 import javax.activation.MimetypesFileTypeMap;
-import java.io.File;
-import java.io.IOException;
-import java.net.FileNameMap;
-import java.net.URLConnection;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 
 
@@ -84,11 +77,11 @@ public class MinioStepExecution {
                 contentType = new MimetypesFileTypeMap().getContentType(filename);
             }
             taskListener.getLogger().println(String.format("Storing [%s] in bucket  [%s] , mime [%s] ", filename, step.getBucket(),contentType));
-            try {
+            try (InputStream fileInputStream = filePath.read()) {
                 PutObjectArgs put = PutObjectArgs.builder()
                         .bucket(this.step.getBucket())
                         .object(targetFolder + filename)
-                        .stream(filePath.read(), filePath.toVirtualFile().length(), -1)
+                        .stream(fileInputStream, filePath.toVirtualFile().length(), -1)
                         .contentType(contentType)
                         .build();
                 client.putObject(put);
