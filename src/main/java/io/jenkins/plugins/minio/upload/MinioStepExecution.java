@@ -71,7 +71,7 @@ public class MinioStepExecution {
         }
 
         final String targetFolder = targetFolderExpanded;
-        Arrays.asList(workspace.list(includes, excludes)).forEach(filePath -> {
+        for (FilePath filePath : workspace.list(includes, excludes)) {
             String filename = filePath.getName();
             Path path = Paths.get(filename);
             String contentType = null;
@@ -84,21 +84,14 @@ public class MinioStepExecution {
                 contentType = new MimetypesFileTypeMap().getContentType(filename);
             }
             taskListener.getLogger().println(String.format("Storing [%s] in bucket  [%s] , mime [%s] ", filename, step.getBucket(),contentType));
-            try {
-                PutObjectArgs put = PutObjectArgs.builder()
-                        .bucket(this.step.getBucket())
-                        .object(targetFolder + filename)
-                        .stream(filePath.read(), filePath.toVirtualFile().length(), -1)
-                        .contentType(contentType)
-                        .build();
-                client.putObject(put);
-
-            } catch (RuntimeException ex) {
-                throw ex;
-            } catch (Exception ex) { // Gotta catch 'em all
-                run.setResult(Result.UNSTABLE);
-            }
-        });
+            PutObjectArgs put = PutObjectArgs.builder()
+                    .bucket(this.step.getBucket())
+                    .object(targetFolder + filename)
+                    .stream(filePath.read(), filePath.toVirtualFile().length(), -1)
+                    .contentType(contentType)
+                    .build();
+            client.putObject(put);
+        }
 
         return true;
     }
