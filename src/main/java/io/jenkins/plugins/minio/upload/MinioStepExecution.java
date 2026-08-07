@@ -15,7 +15,6 @@ import io.jenkins.plugins.minio.ConfigHelper;
 import io.jenkins.plugins.minio.config.GlobalMinioConfiguration;
 import io.jenkins.plugins.minio.config.MinioConfiguration;
 import io.minio.*;
-import org.apache.commons.lang.StringUtils;
 
 import javax.security.auth.login.CredentialNotFoundException;
 import java.util.Arrays;
@@ -66,7 +65,7 @@ public class MinioStepExecution {
         String excludes = Util.replaceMacro(this.step.getExcludes(), env);
         String targetFolderExpanded = Util.replaceMacro(this.step.getTargetFolder(), env);
 
-        if (!StringUtils.isEmpty(targetFolderExpanded) && !targetFolderExpanded.endsWith("/")) {
+        if (Util.fixEmpty(targetFolderExpanded) != null && !targetFolderExpanded.endsWith("/")) {
             targetFolderExpanded = targetFolderExpanded + "/";
         }
 
