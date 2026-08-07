@@ -12,7 +12,6 @@ import io.minio.*;
 import io.minio.errors.*;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
-import org.apache.commons.lang.StringUtils;
 
 import java.io.*;
 import java.security.InvalidKeyException;

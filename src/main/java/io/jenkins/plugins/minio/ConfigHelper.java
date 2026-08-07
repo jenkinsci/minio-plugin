@@ -1,8 +1,8 @@
 package io.jenkins.plugins.minio;
 
+import hudson.Util;
 import io.jenkins.plugins.minio.config.GlobalMinioConfiguration;
 import io.jenkins.plugins.minio.config.MinioConfiguration;
-import org.apache.commons.lang.StringUtils;
 
 public class ConfigHelper {
 
@@ -13,7 +13,7 @@ public class ConfigHelper {
     public static MinioConfiguration getConfig(String host, String credentialsId) {
         MinioConfiguration config;
         // If host is empty, use global config
-        if (StringUtils.isEmpty(host)) {
+        if (Util.fixEmpty(host) == null) {
             config = GlobalMinioConfiguration.get().getConfiguration();
         } else {
             config = new MinioConfiguration();
